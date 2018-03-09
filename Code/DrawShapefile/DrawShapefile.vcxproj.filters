@@ -30,6 +30,15 @@
     <ClInclude Include="DrawShapefile.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="CELLMath.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CELLShader.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CELLWinApp.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
