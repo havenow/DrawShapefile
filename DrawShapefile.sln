@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DrawShapefile", "DrawShapefile\DrawShapefile.vcxproj", "{604FCAE6-B1BB-4AB6-B547-02B8D79915B7}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DrawShapefile", "Code\DrawShapefile\DrawShapefile.vcxproj", "{604FCAE6-B1BB-4AB6-B547-02B8D79915B7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
