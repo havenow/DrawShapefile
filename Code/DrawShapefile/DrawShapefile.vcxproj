@@ -151,8 +151,10 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CELLFeature.hpp" />
     <ClInclude Include="CELLMath.hpp" />
     <ClInclude Include="CELLShader.hpp" />
+    <ClInclude Include="CELLShpReader.hpp" />
     <ClInclude Include="CELLWinApp.hpp" />
     <ClInclude Include="DrawShapefile.h" />
     <ClInclude Include="Resource.h" />

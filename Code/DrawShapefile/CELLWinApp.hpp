@@ -10,6 +10,7 @@
 
 #include "CELLMath.hpp"
 #include "CELLShader.hpp"
+#include "CELLShpReader.hpp"
 
 namespace   CELL
 {
@@ -31,6 +32,8 @@ namespace   CELL
         EGLDisplay  _display;
         //! 增加shader
         PROGRAM_P2_AC4  _shader;
+		PROGRAM_P2_C4   _shaderShp;
+		CELLShpReader   _shpReader;
     public:
         CELLWinApp(HINSTANCE hInstance)
             :_hInstance(hInstance)
@@ -178,29 +181,33 @@ namespace   CELL
 
             //! 创建一个投影矩阵
 
-            CELL::matrix4   screenProj  =   CELL::ortho<float>(0,float(_width),float(_height),0,-100.0f,100);
-            _shader.begin();
-            {
-                float   x   =   100;
-                float   y   =   100;
-                float   w   =   100;
-                float   h   =   100;
-                Vertex  vertex[]   =   
-                {
-                    CELL::float2(x,y),          CELL::Rgba4Byte(255,0,0,255),
-                    CELL::float2(x + w,y),      CELL::Rgba4Byte(0,255,0,255),
-                    CELL::float2(x,y + h),      CELL::Rgba4Byte(0,0,255,255),
-                    CELL::float2(x + w, y + h), CELL::Rgba4Byte(255,255,255,255),
-                };
+			CELL::matrix4   longLatPrj = CELL::ortho<float>(_shpReader._xMin, _shpReader._xMax, _shpReader._yMin, _shpReader._yMax, -100.0f, 100);
+			_shaderShp.begin();
 
-                glUniformMatrix4fv(_shader._MVP, 1, false, screenProj.data());
-                glVertexAttribPointer(_shader._position,2,GL_FLOAT,         false,  sizeof(Vertex),vertex);
-                glVertexAttribPointer(_shader._color,   4,GL_UNSIGNED_BYTE, true,   sizeof(Vertex),&vertex[0].color);
-                glDrawArrays(GL_TRIANGLE_STRIP,0,4);
-            }
-            _shader.end();
+			glUniformMatrix4fv(_shaderShp._MVP, 1, false, longLatPrj.data());
+
+			_shpReader.render(_shaderShp);
+
+			_shaderShp.end();
 
         }
+
+		char*   getPathName()
+		{
+			static  char szResource[1024] = { 0 };
+			char    szBuf[1024];
+			GetModuleFileNameA(0, szBuf, sizeof(szBuf));
+
+			std::string     strPathName = szBuf;
+			size_t          pos = strPathName.rfind("\\");
+			std::string     strPath = strPathName.substr(0, pos);
+			pos = strPath.rfind("\\");
+			strPathName = strPath.substr(0, pos);
+			strcpy(szResource, strPathName.c_str());
+
+			return  szResource;
+		}
+
         /**
         *   主函数
         */
@@ -233,6 +240,10 @@ namespace   CELL
                 return  false;
             }
             _shader.initialize();
+			_shaderShp.initialize();
+			char    filePath[1024];
+			sprintf(filePath, "%s/data/china_province.shp", getPathName());
+			_shpReader.read(filePath);
             MSG msg =   {0};
             while(msg.message != WM_QUIT)
             {
