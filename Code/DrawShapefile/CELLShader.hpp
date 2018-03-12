@@ -288,3 +288,125 @@ public:
         glUseProgram(0);
     }
 };
+
+class   CELLUIProgram :public ProgramId
+{
+	typedef int     location;
+protected:
+	/**
+	*   属性 attribute
+	*/
+	location    _position;
+	location    _color;
+	location    _uv;
+	/**
+	*   uniform
+	*/
+	location    _MVP;
+	location    _texture;
+public:
+	CELLUIProgram()
+	{
+		_position = -1;
+		_color = -1;
+		_uv = -1;
+		_texture = -1;
+		_MVP = -1;
+	}
+	virtual ~CELLUIProgram()
+	{}
+
+	location    getPositionAttribute() const
+	{
+		return  _position;
+	}
+	location    getColorAttribute() const
+	{
+		return  _color;
+	}
+	location    getUV1Attribute() const
+	{
+		return  _uv;
+	}
+	location    getMVPUniform() const
+	{
+		return  _MVP;
+	}
+
+	location    getTexture1Uniform() const
+	{
+		return  _texture;
+	}
+	/**
+	*   舒适化函数，做基本的OpenGL和应用程序直接的接口
+	*/
+	virtual void    initialize()
+	{
+		const char* vs =
+		{
+			"precision  lowp float; "
+			"uniform    mat4 _MVP;"
+			"attribute  vec3 _position;"
+			"attribute  vec3 _uv;"
+			"attribute  vec4 _color;"
+
+			"varying    vec3 _outUV;"
+			"varying    vec4 _outColor;"
+			"void main()"
+			"{"
+			"   vec4    pos =   vec4(_position.x,_position.y,_position.z,1);"
+			"   gl_Position =   _MVP * pos;"
+			"   _outUV      =   _uv;"
+			"   _outColor   =   _color;"
+			"}"
+		};
+		const char* ps =
+		{
+			"precision  lowp float; "
+			"uniform    sampler2D   _texture;"
+			"varying    vec4        _outColor;"
+			"varying    vec3        _outUV;"
+			"void main()"
+			"{"
+			"   vec4   color   =   texture2D(_texture,vec2(_outUV.x,_outUV.y));"
+
+			"  gl_FragColor    =   vec4(_outColor.x,_outColor.y,_outColor.z,color.w * _outColor.w);\n"
+
+			"}"
+		};
+
+		bool    res = createProgram(vs, ps);
+		if (res)
+		{
+			_position = glGetAttribLocation(_programId, "_position");
+			_uv = glGetAttribLocation(_programId, "_uv");
+			_color = glGetAttribLocation(_programId, "_color");
+
+			_texture = glGetUniformLocation(_programId, "_texture");
+			_MVP = glGetUniformLocation(_programId, "_MVP");
+		}
+
+
+	}
+	/**
+	*   使用程序
+	*/
+	virtual void    begin()
+	{
+		glUseProgram(_programId);
+		glEnableVertexAttribArray(_position);
+		glEnableVertexAttribArray(_uv);
+		glEnableVertexAttribArray(_color);
+
+	}
+	/**
+	*   使用完成
+	*/
+	virtual void    end()
+	{
+		glDisableVertexAttribArray(_position);
+		glDisableVertexAttribArray(_uv);
+		glDisableVertexAttribArray(_color);
+		glUseProgram(0);
+	}
+};

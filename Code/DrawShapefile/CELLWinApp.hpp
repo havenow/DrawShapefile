@@ -11,6 +11,7 @@
 #include "CELLMath.hpp"
 #include "CELLShader.hpp"
 #include "CELLShpReader.hpp"
+#include "CELLFont.hpp"
 
 namespace   CELL
 {
@@ -34,6 +35,7 @@ namespace   CELL
         PROGRAM_P2_AC4  _shader;
 		PROGRAM_P2_C4   _shaderShp;
 		CELLShpReader   _shpReader;
+		CELLFont        _font;
     public:
         CELLWinApp(HINSTANCE hInstance)
             :_hInstance(hInstance)
@@ -190,6 +192,13 @@ namespace   CELL
 
 			_shaderShp.end();
 
+			CELL::matrix4   screenProj = CELL::ortho<float>(0, float(_width), float(_height), 0, -100.0f, 100);
+			_font.beginText(screenProj);
+
+			_font.drawText(200, 120, 0, Rgba4Byte(255, 255, 0), L"1232435465878OpenGLÊÓÆµ¿Î³Ì", -1);
+
+			_font.endText();
+
         }
 
 		char*   getPathName()
@@ -244,6 +253,9 @@ namespace   CELL
 			char    filePath[1024];
 			sprintf(filePath, "%s/data/china_province.shp", getPathName());
 			_shpReader.read(filePath);
+
+			sprintf(filePath, "%s/data/simsun.ttc", getPathName());
+			_font.buildSystemFont(filePath, 60);
             MSG msg =   {0};
             while(msg.message != WM_QUIT)
             {
