@@ -181,6 +181,9 @@ namespace   CELL
             //! 视口，在Windows窗口指定的位置和大小上绘制OpenGL内容
             glViewport(0,0,_width,_height);
 
+			_shpReader._width = _width;
+			_shpReader._height = _height;
+
             //! 创建一个投影矩阵
 
 			CELL::matrix4   longLatPrj = CELL::ortho<float>(_shpReader._xMin, _shpReader._xMax, _shpReader._yMin, _shpReader._yMax, -100.0f, 100);
@@ -193,9 +196,16 @@ namespace   CELL
 			_shaderShp.end();
 
 			CELL::matrix4   screenProj = CELL::ortho<float>(0, float(_width), float(_height), 0, -100.0f, 100);
+
 			_font.beginText(screenProj);
 
-			_font.drawText(200, 120, 0, Rgba4Byte(255, 255, 0), L"1232435465878OpenGL视频课程", -1);
+			_shpReader.renderText(_font);
+
+			_font.endText();
+
+			_font.beginText(screenProj);
+
+			_font.drawText(200, 120, 0, Rgba4Byte(255, 255, 0,150), L"1232435465878OpenGL视频课程", -1);
 
 			_font.endText();
 
@@ -251,11 +261,13 @@ namespace   CELL
             _shader.initialize();
 			_shaderShp.initialize();
 			char    filePath[1024];
+			char    filePathDbf[1024];
 			sprintf(filePath, "%s/data/china_province.shp", getPathName());
-			_shpReader.read(filePath);
+			sprintf(filePathDbf, "%s/data/china_province.dbf", getPathName());
+			_shpReader.read(filePath, filePathDbf);
 
 			sprintf(filePath, "%s/data/simsun.ttc", getPathName());
-			_font.buildSystemFont(filePath, 60);
+			_font.buildSystemFont(filePath, 20);
             MSG msg =   {0};
             while(msg.message != WM_QUIT)
             {

@@ -16,7 +16,20 @@ namespace   CELL
     class   CELLFeature :public std::vector<float2>
     {
     public:
-        ArrayPrimative  _pris;
+		CELLFeature()
+		{
+			memset(_text, 0, sizeof(_text));
+			_minX = 0;
+			_minY = 0;
+			_maxX = 0;
+			_maxY = 0;
+		}
+		ArrayPrimative  _pris;
+		wchar_t         _text[32];
+		float           _minX;
+		float           _minY;
+		float           _maxX;
+		float           _maxY;
     };
 
     typedef std::vector<CELLFeature*>   ArrayFeature;

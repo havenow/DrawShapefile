@@ -370,7 +370,7 @@ public:
 			"{"
 			"   vec4   color   =   texture2D(_texture,vec2(_outUV.x,_outUV.y));"
 
-			"  gl_FragColor    =   vec4(_outColor.x,_outColor.y,_outColor.z,color.w * _outColor.w);\n"
+			"  gl_FragColor    =   vec4(_outColor.x,_outColor.y,_outColor.z,color.w * _outColor.w);\n"//文字有半透效果
 
 			"}"
 		};

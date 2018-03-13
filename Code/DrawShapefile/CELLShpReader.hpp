@@ -3,6 +3,7 @@
 #include "shp/shapefil.h"
 
 #include "CELLFeature.hpp"
+#include "cellfont.hpp"
 
 namespace   CELL
 {
@@ -17,6 +18,9 @@ namespace   CELL
         float           _xMin;
         float           _yMin;
 
+		int             _width;
+		int             _height;
+
     public:
 		virtual ~CELLShpReader()
 		{
@@ -26,9 +30,54 @@ namespace   CELL
 			}
 		}
 
-        bool    read(const char* shpName)
+		wchar_t*   a2u(const char* text, size_t length = 0)
+		{
+			if (length == 0)
+			{
+				length = strlen(text);
+			}
+			static  wchar_t sBuffer[2048] = { 0 };
+			memset(sBuffer, 0, sizeof(sBuffer));
+			::MultiByteToWideChar(CP_ACP, 0, text, length, sBuffer, sizeof(sBuffer) / sizeof(wchar_t));
+			return  sBuffer;
+		}
+		/**
+		*   utf-8编码方式转化为unicode
+		*/
+		wchar_t* utf82u(const char* buf)
+		{
+			int len = ::MultiByteToWideChar(CP_UTF8, 0, buf, -1, NULL, 0);
+			if (len == 0)
+				return L"";
+
+			static  wchar_t     unicode[2048] = { 0 };
+			memset(unicode, 0, sizeof(unicode));
+			::MultiByteToWideChar(CP_UTF8, 0, buf, -1, unicode, len);
+
+			return unicode;
+		}
+
+        bool    read(const char* shpName, const char* dbfName)
         {
+			DBFHandle   hDBF		=	DBFOpen(dbfName, "rb");
             SHPHandle   hShpFile    =   SHPOpen(shpName, "rb" );
+			char*       filedName	=	"NAME";//"PERIMETER";
+			int         nField		=	0;
+
+			for (int i = 0; i < DBFGetFieldCount(hDBF); i++)
+			{
+				DBFFieldType	eType;
+				char            szTitle[32];
+				int             nWidth;
+				int             nDecimals;
+
+				eType = DBFGetFieldInfo(hDBF, i, szTitle, &nWidth, &nDecimals);
+				if (strcmp(szTitle, filedName) == 0)
+				{
+					nField = i;
+				}
+			}
+
             if (hShpFile == 0)
             {
                 return  false;
@@ -45,9 +94,21 @@ namespace   CELL
             {
                 SHPObject*  psShape =   SHPReadObject(hShpFile, i);
                 CELLFeature*feature =   new CELLFeature();
-                feature->reserve(psShape->nVertices);
 
-                
+				feature->_minX = (float)psShape->dfXMin;
+				feature->_minY = (float)psShape->dfYMin;
+				feature->_maxX = (float)psShape->dfXMax;
+				feature->_maxY = (float)psShape->dfYMax;
+
+				char*   fields = "NULL";
+				if (nField != -1)
+				{
+					fields = (char*)DBFReadStringAttribute(hDBF, i, nField);
+				}
+				wchar_t*    text = a2u(fields);
+				wcscpy(feature->_text, text);
+
+                feature->reserve(psShape->nVertices);
 
                 Primative   pri;
                 if (psShape->nParts == 0)
@@ -101,6 +162,7 @@ namespace   CELL
                 SHPDestroyObject(psShape);
                 _features.push_back(feature);
             }
+			DBFClose(hDBF);
             SHPClose(hShpFile);
         }
 
@@ -126,6 +188,38 @@ namespace   CELL
                 }
             }
         }
+
+		/**
+		*   绘制文字
+		*/
+		void    renderText(CELLFont& font)
+		{
+			for (size_t i = 0; i < _features.size(); ++i)
+			{
+				CELLFeature*    feature = _features[i];
+
+				float           centerX = (feature->_minX + feature->_maxX) * 0.5f;
+				float           centerY = (feature->_minY + feature->_maxY) * 0.5f;
+
+				float2          screen = longLatToScreen(float2(centerX, centerY));
+
+				font.drawText(screen.x, screen.y, 0, Rgba4Byte(), feature->_text, wcslen(feature->_text));
+			}
+		}
+
+		/**
+		*   坐标转化
+		*/
+		float2 longLatToScreen(const float2& longLat)
+		{
+
+			float   longSize = _xMax - _xMin;
+			float   latSize = _yMax - _yMin;
+			float   xPixel = longSize / float(_width);
+			float   yPixel = latSize / float(_height);
+
+			return  float2((longLat.x - _xMin) / xPixel, (_yMax - longLat.y) / yPixel);
+		}
     };
 
 }
