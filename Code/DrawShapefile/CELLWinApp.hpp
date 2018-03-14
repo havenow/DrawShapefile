@@ -36,6 +36,8 @@ namespace   CELL
 		PROGRAM_P2_C4   _shaderShp;
 		CELLShpReader   _shpReader;
 		CELLFont        _font;
+		int2            _mouseDown;
+		bool            _isDown;
     public:
         CELLWinApp(HINSTANCE hInstance)
             :_hInstance(hInstance)
@@ -54,6 +56,8 @@ namespace   CELL
             winClass.cbClsExtra     =   0;
             winClass.cbWndExtra     =   0;
             RegisterClassEx(&winClass);
+
+			_isDown = false;
         }
         virtual ~CELLWinApp()
         {
@@ -159,14 +163,83 @@ namespace   CELL
                     ::PostQuitMessage(0);
                 }
                 break;
-            case WM_MOUSEMOVE:
-                break;
+			case WM_MOUSEWHEEL:
+			{
+				short   zDelta = HIWORD(wParam);
+				zoom(zDelta);
+			}
+			break;
+			case WM_LBUTTONDOWN:
+			{
+				_mouseDown = int2(LOWORD(lParam), HIWORD(lParam));
+				_isDown = true;
+			}
+			break;
+			case WM_LBUTTONUP:
+			{
+				_isDown = false;
+			}
+			break;
+			case WM_MOUSEMOVE:
+			{
+				if (_isDown)
+				{
+					int2    pt = int2(LOWORD(lParam), HIWORD(lParam));
+
+
+
+					float   longSize = _shpReader._xMax - _shpReader._xMin;
+					float   latSize = _shpReader._yMax - _shpReader._yMin;
+					float   xPixel = longSize / float(_width);
+					float   yPixel = latSize / float(_height);
+
+					int     xOffset = pt.x - _mouseDown.x;
+					int     yOffset = pt.y - _mouseDown.y;
+
+					_shpReader._xMax -= xPixel * xOffset;
+					_shpReader._xMin -= xPixel * xOffset;
+
+					_shpReader._yMax += yPixel * yOffset;
+					_shpReader._yMin += yPixel * yOffset;
+
+					_mouseDown = pt;
+				}
+			}
+			break;
+			case WM_SIZE:
+			{
+				if (::IsWindow(hWnd))
+				{
+					RECT    rt;
+					GetClientRect(hWnd, &rt);
+					_width = rt.right - rt.left;
+					_height = rt.bottom - rt.top;
+				}
+			}
+			break;
             default:
                 return  DefWindowProc( hWnd, msg, wParam, lParam ); 
             }
             return  S_OK;
             
         }
+
+		void    zoom(short delta)
+		{
+			float   scalar = delta > 0 ? 1.2f : 0.7f;
+			float   centerX = (_shpReader._xMax + _shpReader._xMin) * 0.5f;//采用中心点进行缩放
+			float   centerY = (_shpReader._yMax + _shpReader._yMin) * 0.5f;
+
+			float   width = (_shpReader._xMax - _shpReader._xMin) * scalar * 0.5f;
+			float   height = (_shpReader._yMax - _shpReader._yMin) * scalar * 0.5f;
+
+			_shpReader._xMin = centerX - width;
+			_shpReader._xMax = centerX + width;
+			_shpReader._yMax = centerY + height;
+			_shpReader._yMin = centerY - height;
+
+
+		}
 
         virtual void    render()
         {
