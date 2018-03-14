@@ -214,6 +214,11 @@ namespace   CELL
 					GetClientRect(hWnd, &rt);
 					_width = rt.right - rt.left;
 					_height = rt.bottom - rt.top;
+
+					_shpReader._width = _width;
+					_shpReader._height = _height;
+
+					_shpReader.resize();
 				}
 			}
 			break;
@@ -233,12 +238,12 @@ namespace   CELL
 			float   width = (_shpReader._xMax - _shpReader._xMin) * scalar * 0.5f;
 			float   height = (_shpReader._yMax - _shpReader._yMin) * scalar * 0.5f;
 
-			_shpReader._xMin = centerX - width;
-			_shpReader._xMax = centerX + width;
-			_shpReader._yMax = centerY + height;
-			_shpReader._yMin = centerY - height;
+			//_shpReader._xMin = centerX - width;
+			//_shpReader._xMax = centerX + width;
+			//_shpReader._yMax = centerY + height;
+			//_shpReader._yMin = centerY - height;
 
-
+			_shpReader.setOrth(centerX - width, centerX + width, centerY + height, centerY - height);
 		}
 
         virtual void    render()

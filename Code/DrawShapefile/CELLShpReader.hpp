@@ -220,6 +220,42 @@ namespace   CELL
 
 			return  float2((longLat.x - _xMin) / xPixel, (_yMax - longLat.y) / yPixel);
 		}
+
+		void    setOrth(double left, double right, double top, double bottom)
+		{
+			/**
+			*   这里要计算关于经度纬度与屏幕坐标的比例
+			*   保证比例，不变形
+			*/
+			double    width = abs(right - left);
+			double    height = abs(top - bottom);
+
+			double    fXScale = width / real(_width);
+			double    fYScale = height / real(_height);
+			if (fXScale > fYScale)
+			{
+				height = fXScale * _height;
+			}
+			else
+			{
+				width = fYScale * _width;
+			}
+			double    centerLong = (left + right) * 0.5f;
+			double    centerLat = (bottom + top) * 0.5f;
+
+			/**
+			*   根据新的宽度与高度计算出来bottom 与top
+			*/
+			_xMin = centerLong - width * 0.5f;
+			_xMax = centerLong + width * 0.5f;
+			_yMax = centerLat + height * 0.5f;
+			_yMin = centerLat - height * 0.5f;
+		}
+
+		void    resize()
+		{
+			setOrth(_xMin, _xMax, _yMax, _yMin);
+		}
     };
 
 }
