@@ -283,7 +283,7 @@ namespace   CELL
 
 			_font.beginText(screenProj);
 
-			_font.drawText(200, 120, 0, Rgba4Byte(255, 255, 0,150), L"1232435465878OpenGLÊÓÆµ¿Î³Ì", -1);
+			_font.drawText(200, 120, 0, Rgba4Byte(255, 255, 0,150), L"", -1);
 
 			_font.endText();
 

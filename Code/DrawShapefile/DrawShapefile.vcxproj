@@ -154,6 +154,7 @@
     <ClInclude Include="CELLFeature.hpp" />
     <ClInclude Include="CELLFont.hpp" />
     <ClInclude Include="CELLMath.hpp" />
+    <ClInclude Include="CELLMercator.hpp" />
     <ClInclude Include="CELLShader.hpp" />
     <ClInclude Include="CELLShpReader.hpp" />
     <ClInclude Include="CELLWinApp.hpp" />
