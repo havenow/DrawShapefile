@@ -5,6 +5,7 @@
 #include "CELLFeature.hpp"
 #include "cellfont.hpp"
 #include "CELLMercator.hpp"
+#include "CELLProj4.hpp"
 
 namespace   CELL
 {
@@ -86,20 +87,25 @@ namespace   CELL
             /**
             *   写入图层数据到数据库中
             */
-			_xMax = (float)CELLMercator::lonToMeter(hShpFile->adBoundsMax[0]);
-			_yMax = (float)CELLMercator::latToMeter(hShpFile->adBoundsMax[1]);
-			_xMin = (float)CELLMercator::lonToMeter(hShpFile->adBoundsMin[0]);
-			_yMin = (float)CELLMercator::latToMeter(hShpFile->adBoundsMin[1]);
+			CELLProj4 proj4;
+			double2 uv = proj4.lonLatToMeters(hShpFile->adBoundsMax[0], hShpFile->adBoundsMax[1]);
+			_xMax = uv.x;
+			_yMax = uv.y;
+			uv = proj4.lonLatToMeters(hShpFile->adBoundsMin[0], hShpFile->adBoundsMin[1]);
+			_xMin = uv.x;
+			_yMin = uv.y;
             
             for(int i = 0; i < hShpFile->nRecords; i++ )
             {
                 SHPObject*  psShape =   SHPReadObject(hShpFile, i);
                 CELLFeature*feature =   new CELLFeature();
 
-				feature->_minX = (float)CELLMercator::lonToMeter(psShape->dfXMin);
-				feature->_minY = (float)CELLMercator::latToMeter(psShape->dfYMin);
-				feature->_maxX = (float)CELLMercator::lonToMeter(psShape->dfXMax);
-				feature->_maxY = (float)CELLMercator::latToMeter(psShape->dfYMax);
+				uv = proj4.lonLatToMeters(psShape->dfXMin, psShape->dfYMin);
+				feature->_minX = uv.x;
+				feature->_minY = uv.y;
+				uv = proj4.lonLatToMeters(psShape->dfXMax, psShape->dfYMax);
+				feature->_maxX = uv.x;
+				feature->_maxY = uv.y;
 
 				char*   fields = "NULL";
 				if (nField != -1)
@@ -156,7 +162,7 @@ namespace   CELL
 
                 for ( int j = 0 ; j < psShape->nVertices ; ++ j )
                 {
-					double2 xy = CELLMercator::lonLatToMeters(psShape->padfX[j], psShape->padfY[j]);
+					double2 xy = proj4.lonLatToMeters(psShape->padfX[j], psShape->padfY[j]);
                     float   x = (float)xy.x;
                     float   y = (float)xy.y;
                     feature->push_back(float2(x,y));
