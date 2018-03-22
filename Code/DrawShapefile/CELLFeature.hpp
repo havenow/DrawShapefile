@@ -30,6 +30,7 @@ namespace   CELL
 		float           _minY;
 		float           _maxX;
 		float           _maxY;
+		int             _drawFlag;
     };
 
     typedef std::vector<CELLFeature*>   ArrayFeature;

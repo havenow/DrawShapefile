@@ -23,6 +23,8 @@ namespace   CELL
 		int             _width;
 		int             _height;
 
+		int             _drawFeatures;
+
     public:
 		virtual ~CELLShpReader()
 		{
@@ -177,11 +179,24 @@ namespace   CELL
 
         void    render(PROGRAM_P2_C4& shader)
         {
+			_drawFeatures = 0;
+			AABB2D  aabbWorld;
+			aabbWorld.setExtents(_xMin, _yMin, _xMax, _yMax);
             glUniform4f(shader._color, 1,0,0,1);
 
             for (size_t i = 0 ;i < _features.size() ; ++ i)
             {
                 CELLFeature*    feature =   _features[i];
+
+				AABB2D  aabbFeature;
+				aabbFeature.setExtents(feature->_minX, feature->_minY, feature->_maxX, feature->_maxY);
+				if (!aabbFeature.intersects(aabbWorld))
+				{
+					feature->_drawFlag = 0;
+					continue;
+				}
+				feature->_drawFlag = 1;
+				++_drawFeatures;
 
                 float2* vertex  =   (float2*)&feature->front();
 
@@ -205,6 +220,10 @@ namespace   CELL
 			for (size_t i = 0; i < _features.size(); ++i)
 			{
 				CELLFeature*    feature = _features[i];
+				if (feature->_drawFlag != 1)
+				{
+					continue;
+				}
 
 				float           centerX = (feature->_minX + feature->_maxX) * 0.5f;
 				float           centerY = (feature->_minY + feature->_maxY) * 0.5f;
@@ -213,6 +232,10 @@ namespace   CELL
 
 				font.drawText(screen.x, screen.y, 0, Rgba4Byte(), feature->_text, wcslen(feature->_text));
 			}
+
+			wchar_t     text[128];
+			swprintf(text, L"feature draw %d", _drawFeatures);
+			font.drawText(100, 100, 0, Rgba4Byte(255, 0, 0), text, wcslen(text));
 		}
 
 		/**
