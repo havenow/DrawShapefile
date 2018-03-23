@@ -24,6 +24,7 @@ namespace   CELL
 		int             _height;
 
 		int             _drawFeatures;
+		unsigned        _vertexIndex;
 
     public:
 		virtual ~CELLShpReader()
@@ -76,7 +77,7 @@ namespace   CELL
 				int             nDecimals;
 
 				eType = DBFGetFieldInfo(hDBF, i, szTitle, &nWidth, &nDecimals);
-				if (strcmp(szTitle, filedName) == 0)
+				if (FTString == eType && strcmp(szTitle, filedName) == 0)
 				{
 					nField = i;
 				}
@@ -97,6 +98,7 @@ namespace   CELL
 			_xMin = uv.x;
 			_yMin = uv.y;
             
+			std::vector<float2> arFloat;
             for(int i = 0; i < hShpFile->nRecords; i++ )
             {
                 SHPObject*  psShape =   SHPReadObject(hShpFile, i);
@@ -117,19 +119,19 @@ namespace   CELL
 				wchar_t*    text = a2u(fields);
 				wcscpy(feature->_text, text);
 
-                feature->reserve(psShape->nVertices);
+				arFloat.reserve(psShape->nVertices + arFloat.size());
 
                 Primative   pri;
                 if (psShape->nParts == 0)
                 {
                     pri._count  =   psShape->nVertices;
-                    pri._start  =   0;
+                    pri._start  =   arFloat.size();
                     pri._type   =   GL_LINE_STRIP;
                     feature->_pris.push_back(pri);
                 }
                 for (int x = 0 ;x < psShape->nParts ; ++ x)
                 {
-                    pri._start      =   psShape->panPartStart[x];
+					pri._start = psShape->panPartStart[x] + arFloat.size();
                     //! 最后一个
                     if ( x == psShape->nParts - 1)
                     {
@@ -167,11 +169,19 @@ namespace   CELL
 					double2 xy = proj4.lonLatToMeters(psShape->padfX[j], psShape->padfY[j]);
                     float   x = (float)xy.x;
                     float   y = (float)xy.y;
-                    feature->push_back(float2(x,y));
+					arFloat.push_back(float2(x, y));
                 }
                 SHPDestroyObject(psShape);
                 _features.push_back(feature);
             }
+
+
+			glGenBuffers(1, &_vertexIndex);
+			glBindBuffer(GL_ARRAY_BUFFER, _vertexIndex);
+			glBufferData(GL_ARRAY_BUFFER, arFloat.size() * sizeof(float2), &arFloat.front(), GL_STATIC_DRAW);
+
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+
 			DBFClose(hDBF);
             SHPClose(hShpFile);
         }
@@ -183,6 +193,9 @@ namespace   CELL
 			AABB2D  aabbWorld;
 			aabbWorld.setExtents(_xMin, _yMin, _xMax, _yMax);
             glUniform4f(shader._color, 1,0,0,1);
+
+			glBindBuffer(GL_ARRAY_BUFFER, _vertexIndex);
+			glVertexAttribPointer(shader._position, 2, GL_FLOAT, false, sizeof(float2), 0);
 
             for (size_t i = 0 ;i < _features.size() ; ++ i)
             {
@@ -198,12 +211,6 @@ namespace   CELL
 				feature->_drawFlag = 1;
 				++_drawFeatures;
 
-                float2* vertex  =   (float2*)&feature->front();
-
-                
-                
-                glVertexAttribPointer(shader._position,2,GL_FLOAT,  false,  sizeof(float2),vertex);
-
                 for (size_t j = 0 ; j < feature->_pris.size(); ++ j)
                 {
                     Primative   pri =   feature->_pris[j];
@@ -217,6 +224,8 @@ namespace   CELL
 		*/
 		void    renderText(CELLFont& font)
 		{
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+
 			for (size_t i = 0; i < _features.size(); ++i)
 			{
 				CELLFeature*    feature = _features[i];
