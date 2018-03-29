@@ -6,6 +6,7 @@
 #include "cellfont.hpp"
 #include "CELLMercator.hpp"
 #include "CELLProj4.hpp"
+#include "CELLFrameBuffer.hpp"
 
 namespace   CELL
 {
@@ -15,10 +16,10 @@ namespace   CELL
     {
     public:
         ArrayFeature    _features;
-        float           _xMax;
-        float           _yMax;
-        float           _xMin;
-        float           _yMin;
+        double           _xMax;
+		double           _yMax;
+		double           _xMin;
+		double           _yMin;
 
 		int             _width;
 		int             _height;
@@ -26,13 +27,39 @@ namespace   CELL
 		int             _drawFeatures;
 		unsigned        _vertexIndex;
 
+		CELLFrameBuffer _frameBuffer;
+		unsigned        _frameTextrue;
+		bool            _needDraw;
+
     public:
+		CELLShpReader()
+		{
+			_needDraw = true;
+		}
+
 		virtual ~CELLShpReader()
 		{
 			for (std::vector<CELLFeature*>::iterator it = _features.begin(); it != _features.end(); ++it)
 			{
 				delete *it;
 			}
+		}
+
+		void    init(int w, int h)
+		{
+			_frameBuffer.createFrameBuffer(w, h);
+			glGenTextures(1, &_frameTextrue);
+			glBindTexture(GL_TEXTURE_2D, _frameTextrue);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+		}
+
+		void    resize(int w, int h)
+		{
+			_frameBuffer.resize(w, h);
+			glBindTexture(GL_TEXTURE_2D, _frameTextrue);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 		}
 
 		wchar_t*   a2u(const char* text, size_t length = 0)
@@ -263,6 +290,16 @@ namespace   CELL
 
 		void    setOrth(double left, double right, double top, double bottom)
 		{
+
+			if (left == _xMin && right == _xMax && top == _yMax && bottom == _yMin)
+			{
+				_needDraw = false;
+			}
+			else
+			{
+				_needDraw = true;
+			}
+
 			/**
 			*   这里要计算关于经度纬度与屏幕坐标的比例
 			*   保证比例，不变形

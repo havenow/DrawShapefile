@@ -153,6 +153,7 @@
   <ItemGroup>
     <ClInclude Include="CELLFeature.hpp" />
     <ClInclude Include="CELLFont.hpp" />
+    <ClInclude Include="CELLFrameBuffer.hpp" />
     <ClInclude Include="CELLMath.hpp" />
     <ClInclude Include="CELLMercator.hpp" />
     <ClInclude Include="CELLProj4.hpp" />

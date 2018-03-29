@@ -35,6 +35,7 @@ namespace   CELL
         PROGRAM_P2_AC4  _shader;
 		PROGRAM_P2_C4   _shaderShp;
 		CELLShpReader   _shpReader;
+		PROGRAM_P2_UV2  _shaderTex;
 		CELLFont        _font;
 		int2            _mouseDown;
 		bool            _isDown;
@@ -219,6 +220,7 @@ namespace   CELL
 					_shpReader._height = _height;
 
 					_shpReader.resize();
+					
 				}
 			}
 			break;
@@ -249,43 +251,67 @@ namespace   CELL
         virtual void    render()
         {
 
-            struct  Vertex
-            {
-                CELL::float2    pos;
-                CELL::Rgba4Byte color;
-            };
-            //! 清空缓冲区
-            glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-            //! 视口，在Windows窗口指定的位置和大小上绘制OpenGL内容
-            glViewport(0,0,_width,_height);
+			struct  Vertex
+			{
+				float   x, y, u, v;
+			};
 
-			_shpReader._width = _width;
-			_shpReader._height = _height;
-
-            //! 创建一个投影矩阵
-
-			CELL::matrix4   longLatPrj = CELL::ortho<float>(_shpReader._xMin, _shpReader._xMax, _shpReader._yMin, _shpReader._yMax, -100.0f, 100);
-			_shaderShp.begin();
-
-			glUniformMatrix4fv(_shaderShp._MVP, 1, false, longLatPrj.data());
-
-			_shpReader.render(_shaderShp);
-
-			_shaderShp.end();
+			//! 视口，在Windows窗口指定的位置和大小上绘制OpenGL内容
+			glViewport(0, 0, _width, _height);
 
 			CELL::matrix4   screenProj = CELL::ortho<float>(0, float(_width), float(_height), 0, -100.0f, 100);
 
-			_font.beginText(screenProj);
+			if (_shpReader._needDraw)
+			{
+				_shpReader._needDraw = false;
+				_shpReader._frameBuffer.begin(_shpReader._frameTextrue);
+				//! 清空缓冲区
+				glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+				//! 创建一个投影矩阵
 
-			_shpReader.renderText(_font);
 
-			_font.endText();
 
-			_font.beginText(screenProj);
+				CELL::matrix4   longLatPrj = CELL::ortho<float>(_shpReader._xMin, _shpReader._xMax, _shpReader._yMin, _shpReader._yMax, -100.0f, 100);
+				_shaderShp.begin();
 
-			_font.drawText(200, 120, 0, Rgba4Byte(255, 255, 0,150), L"", -1);
+				_shpReader._width = _width;
+				_shpReader._height = _height;
+				glUniformMatrix4fv(_shaderShp._MVP, 1, false, longLatPrj.data());
 
-			_font.endText();
+
+				_shpReader.render(_shaderShp);
+
+				_shaderShp.end();
+
+				_font.beginText(screenProj);
+
+				_shpReader.renderText(_font);
+				_font.endText();
+
+				_shpReader._frameBuffer.end();
+			}
+
+
+
+			Vertex  vertex[] =
+			{
+				{ 0,0,       0,1 },
+				{ _width,0,  1,1 },
+				{ 0,_height, 0,0 },
+				{ _width,_height, 1,0 },
+			};
+
+			glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+
+			glBindTexture(GL_TEXTURE_2D, _shpReader._frameTextrue);
+			_shaderTex.begin();
+			glUniformMatrix4fv(_shaderTex._MVP, 1, false, screenProj.data());
+			glUniform1i(_shaderTex._texture, 0);
+
+			glVertexAttribPointer(_shaderTex._position, 2, GL_FLOAT, false, sizeof(Vertex), vertex);
+			glVertexAttribPointer(_shaderTex._uv, 2, GL_FLOAT, false, sizeof(Vertex), &vertex[0].u);
+			glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+			_shaderShp.end();
 
         }
 
@@ -338,11 +364,13 @@ namespace   CELL
             }
             _shader.initialize();
 			_shaderShp.initialize();
+			_shaderTex.initialize();
 			char    filePath[1024];
 			char    filePathDbf[1024];
 			sprintf(filePath, "%s/data/china_province.shp", getPathName());
 			sprintf(filePathDbf, "%s/data/china_province.dbf", getPathName());
 			_shpReader.read(filePath, filePathDbf);
+			_shpReader.init(_width, _height);
 
 			sprintf(filePath, "%s/data/simsun.ttc", getPathName());
 			_font.buildSystemFont(filePath, 20);

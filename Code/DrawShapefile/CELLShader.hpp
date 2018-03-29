@@ -410,3 +410,92 @@ public:
 		glUseProgram(0);
 	}
 };
+
+class   PROGRAM_P2_UV2 :public ProgramId
+{
+	typedef int     location;
+public:
+	/**
+	*   属性 attribute
+	*/
+	location    _position;
+	location    _uv;
+	/**
+	*   uniform
+	*/
+	location    _MVP;
+	location    _texture;
+public:
+	PROGRAM_P2_UV2()
+	{
+		_position = -1;
+		_uv = -1;
+		_texture = -1;
+		_MVP = -1;
+	}
+	virtual ~PROGRAM_P2_UV2()
+	{}
+
+	/**
+	*   舒适化函数，做基本的OpenGL和应用程序直接的接口
+	*/
+	virtual void    initialize()
+	{
+		const char* vs =
+		{
+			"precision  lowp float; "
+			"uniform    mat4 _MVP;"
+			"attribute  vec2 _position;"
+			"attribute  vec2 _uv;"
+			"varying    vec2 _outUV;"
+			"void main()"
+			"{"
+			"   vec4    pos =   vec4(_position.x,_position.y,0,1);"
+			"   gl_Position =   _MVP * pos;"
+			"   _outUV      =   _uv;"
+			"}"
+		};
+		const char* ps =
+		{
+			"precision  lowp float; "
+			"uniform    sampler2D   _texture;"
+			"varying    vec2        _outUV;"
+			"void main()"
+			"{"
+			"   vec4   color   =   texture2D(_texture,vec2(_outUV.x,_outUV.y));"
+			"   gl_FragColor    =   vec4(color.x,color.y,color.z,1);"
+			"}"
+		};
+
+		bool    res = createProgram(vs, ps);
+		if (res)
+		{
+			_position = glGetAttribLocation(_programId, "_position");
+			_uv = glGetAttribLocation(_programId, "_uv");
+
+			_texture = glGetUniformLocation(_programId, "_texture");
+			_MVP = glGetUniformLocation(_programId, "_MVP");
+		}
+
+
+	}
+	/**
+	*   使用程序
+	*/
+	virtual void    begin()
+	{
+		glUseProgram(_programId);
+		glEnableVertexAttribArray(_position);
+		glEnableVertexAttribArray(_uv);
+
+	}
+	/**
+	*   使用完成
+	*/
+	virtual void    end()
+	{
+		glDisableVertexAttribArray(_position);
+		glDisableVertexAttribArray(_uv);
+		glUseProgram(0);
+	}
+};

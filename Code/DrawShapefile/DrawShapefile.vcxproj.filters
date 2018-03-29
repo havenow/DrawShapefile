@@ -60,6 +60,9 @@
     <ClInclude Include="CELLProj4.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="CELLFrameBuffer.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
