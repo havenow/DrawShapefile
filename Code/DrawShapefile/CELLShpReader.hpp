@@ -30,6 +30,7 @@ namespace   CELL
 		CELLFrameBuffer _frameBuffer;
 		unsigned        _frameTextrue;
 		bool            _needDraw;
+		bool			_bFirst = true;
 
     public:
 		CELLShpReader()
@@ -298,6 +299,12 @@ namespace   CELL
 			else
 			{
 				_needDraw = true;
+			}
+
+			if (_bFirst)
+			{
+				_needDraw = true;
+				_bFirst = false;
 			}
 
 			/**
